@@ -1,0 +1,125 @@
+# Taskfile.yml - Task runner configuration for the Go project
+# Install task runner from: https://taskfile.dev/install/
+# Usage: task [task-name]
+
+version: '3'
+
+vars:
+  DB_DRIVER: postgres
+  DB_STRING: '{{.DB_STRING | default ""}}'
+  MIGRATION_DIR: internal/migrations
+  BINARY_NAME: server
+  BUILD_DIR: bin
+  GO_FILES: "./..."
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list-all
+
+  build:
+    desc: Build the Go application binary
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} cmd/server/main.go
+    sources:
+      - cmd/server/main.go
+      - internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  test:
+    desc: Run all Go unit tests with verbose output
+    cmds:
+      - go test -v {{.GO_FILES}}
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+
+  run:
+    desc: Run the Go application
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}}
+
+  # Goose migration tasks
+  migrate-create:
+    desc: Create new migration files using Goose (requires MIGRATION_NAME variable)
+    cmds:
+      - |
+        if [ -z "{{.MIGRATION_NAME}}" ]; then
+          echo "Error: MIGRATION_NAME is required. Usage: task migrate-create MIGRATION_NAME=create_users_table"
+          exit 1
+        fi
+      - goose -dir {{.MIGRATION_DIR}} create {{.MIGRATION_NAME}} sql
+    requires:
+      vars: [MIGRATION_NAME]
+
+  migrate-up:
+    desc: Run Goose migrate up command
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" up
+    preconditions:
+      - sh: test -n "{{.DB_STRING}}"
+        msg: "Error: DB_STRING environment variable must be set"
+
+  migrate-down:
+    desc: Run Goose migrate down command
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" down
+    preconditions:
+      - sh: test -n "{{.DB_STRING}}"
+        msg: "Error: DB_STRING environment variable must be set"
+
+  migrate-status:
+    desc: Check Goose migration status
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" status
+    preconditions:
+      - sh: test -n "{{.DB_STRING}}"
+        msg: "Error: DB_STRING environment variable must be set"
+
+  migrate-reset:
+    desc: Rollback all migrations and re-run them
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" reset
+    preconditions:
+      - sh: test -n "{{.DB_STRING}}"
+        msg: "Error: DB_STRING environment variable must be set"
+
+  # Development tasks
+  dev:
+    desc: Run the application in development mode with hot reload (requires air)
+    cmds:
+      - air
+
+  fmt:
+    desc: Format Go code
+    cmds:
+      - go fmt {{.GO_FILES}}
+
+  vet:
+    desc: Run go vet on all packages
+    cmds:
+      - go vet {{.GO_FILES}}
+
+  lint:
+    desc: Run linter (requires golangci-lint)
+    cmds:
+      - golangci-lint run
+
+  deps:
+    desc: Download and verify Go module dependencies
+    cmds:
+      - go mod download
+      - go mod verify
+
+  tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
