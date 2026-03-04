@@ -13,6 +13,7 @@ type ExpenseRepository interface {
 	CreateExpense(expense model.Expense) error
 	UpdateExpense(expense model.Expense) error
 	DeleteExpense(id string) error
+	GetExpenseById(id string) (model.Expense, error)
 }
 
 type expenseRepository struct {
@@ -35,6 +36,20 @@ func (r *expenseRepository) GetExpenses() ([]model.Expense, error) {
 		return nil, err
 	}
 	return expenses, nil
+}
+
+func (r *expenseRepository) GetExpenseById(id string) (model.Expense, error) {
+	query := `SELECT * FROM expenses WHERE id = $1`
+	rows, err := r.db.Query(context.Background(), query, id)
+	if err != nil {
+		return model.Expense{}, err
+	}
+	defer rows.Close()
+	expense, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Expense])
+	if err != nil {
+		return model.Expense{}, err
+	}
+	return expense, nil
 }
 
 func (r *expenseRepository) CreateExpense(expense model.Expense) error {
