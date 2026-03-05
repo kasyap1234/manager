@@ -9,14 +9,13 @@ type Parser interface {
 	Parse(sms string) (model.Transaction, error)
 }
 
-type SMSParser struct{
+type SMSParser struct {
 	llmClient *llm.GeminiClient
 }
 
-// call llm to parse the sms
 func (p SMSParser) Parse(sms string) (model.Transaction, error) {
 	// call llm to parse the sms
-	// 
+	//
 	response, err := p.llmClient.Call(sms)
 	if err != nil {
 		return model.Transaction{}, err
