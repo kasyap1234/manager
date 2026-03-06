@@ -2,16 +2,18 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
-
-	"github.com/subosito/gotenv"
 )
 
 type Config struct {
-	AIConfig AIConfig
-	DBConfig DBConfig
+	ServerConfig ServerConfig
+	AIConfig     AIConfig
+	DBConfig     DBConfig
+}
+
+type ServerConfig struct {
+	Port string
 }
 
 type AIConfig struct {
@@ -28,31 +30,41 @@ type DBConfig struct {
 	DBSSLMode  string
 }
 
-func NewConfig()*Config{
-	aiCfg :=AIConfig{
+func NewConfig() *Config {
+	aiCfg := AIConfig{
 		APIKey: mustGetEnv("API_KEY"),
-		Model: getEnvOrDefault("MODEL", "gemini-3.1-flash-lite"),
+		Model:  getEnvOrDefault("MODEL", "gemini-3.1-flash-lite"),
 	}
-	dbCfg :=DBConfig{
-		DBName: mustGetEnv("DB_NAME"),
-		
+
+	serverCfg := ServerConfig{
+		Port: getEnvOrDefault("PORT", "8080"),
+	}
+
+	dbCfg := DBConfig{
+		DBName:     mustGetEnv("DB_NAME"),
+		DBUser:     mustGetEnv("DB_USER"),
+		DBPassword: mustGetEnv("DB_PASSWORD"),
+		DBHost:     mustGetEnv("DB_HOST"),
+		DBPort:     mustGetEnv("DB_PORT"),
+		DBSSLMode:  mustGetEnv("DB_SSL_MODE"),
 	}
 	return &Config{
-		aiCfg,
-		dbCfg,
+		ServerConfig: serverCfg,
+		AIConfig:     aiCfg,
+		DBConfig:     dbCfg,
 	}
 }
 
-
-func mustGetEnv(key string)string{
-	if val :=os.Getenv(key); val !=""{
+func mustGetEnv(key string) string {
+	if val := os.Getenv(key); val != "" {
 		return val
 	}
-	return fmt.Errorf("unable to get the value of the %s",key)
+	log.Fatalf("unable to get the value of the %s", key)
+	return ""
 }
 
-func getEnvOrDefault(key string,defaultValue string)string{
-	if val :=os.Getenv(key); val !=""{
+func getEnvOrDefault(key string, defaultValue string) string {
+	if val := os.Getenv(key); val != "" {
 		return val
 	}
 	return defaultValue

@@ -2,15 +2,15 @@ package handler
 
 import (
 	"fmt"
-	"manager/internal/config"
+	"manager/internal/service"
 )
 
 type Handler struct {
-	config *config.Config
+	services *service.Service
 }
 
-func NewHandler(config *config.Config) *Handler {
-	return &Handler{config: config}
+func NewHandler(service *service.Service) *Handler {
+	return &Handler{services: service}
 }
 
 func (h *Handler) Handle() {

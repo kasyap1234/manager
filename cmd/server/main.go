@@ -1,14 +1,11 @@
 package main
 
-import (
-	"log"
-	"manager/internal/config"
-)
+import "manager/app"
 
 func main() {
-	cfg := config.NewConfig()
-	if err := cfg.Load(); err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	app, err := app.New()
+	if err != nil {
+		panic(err)
 	}
-
+	app.Run()
 }

@@ -1,13 +1,11 @@
 package service
 
+import "manager/internal/repository"
 
 type Service struct {
-	expenseService *ExpenseService
+	repo *repository.Repository
 }
 
-func NewService(expenseService *ExpenseService) *Service {
-	return &Service{expenseService: expenseService}
+func NewService(repo *repository.Repository) *Service {
+	return &Service{repo: repo}
 }
-
-
-
