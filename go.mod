@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/jackc/pgx/v5 v5.8.0
+	github.com/subosito/gotenv v1.6.0
 	google.golang.org/genai v1.48.0
 )
 

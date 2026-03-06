@@ -37,8 +37,12 @@ func (r *expenseRepository) GetExpenses() ([]*model.Expense, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &expenses, nil
+	result := make([]*model.Expense, len(expenses))
+	for i := range expenses {
+		result[i] = &expenses[i]
 	}
+	return result, nil
+}
 
 func (r *expenseRepository) CreateExpense(expense *model.Expense) error {
 	query := `INSERT INTO expenses (amount, date, category, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
@@ -65,4 +69,15 @@ func (r *expenseRepository) DeleteExpense(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (r *expenseRepository) GetExpenseByID(id string) (*model.Expense, error) {
+	query := `SELECT * FROM expenses WHERE id = $1`
+	row := r.db.QueryRow(context.Background(), query, id)
+	var expense model.Expense
+	err := row.Scan(&expense.ID, &expense.Amount, &expense.Date, &expense.Category, &expense.Description, &expense.CreatedAt, &expense.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &expense, nil
 }

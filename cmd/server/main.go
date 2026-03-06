@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"manager/internal/config"
 )
 
 func main() {
-	fmt.Println("Server starting...")
-	log.Println("Application initialized")
+	cfg := config.NewConfig()
+	if err := cfg.Load(); err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
 }
