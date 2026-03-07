@@ -7,7 +7,6 @@ import (
 	"manager/internal/model"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ExpenseRepository interface {
@@ -19,10 +18,10 @@ type ExpenseRepository interface {
 }
 
 type expenseRepository struct {
-	db *pgxpool.Pool
+	db *pgx.Conn
 }
 
-func NewExpenseRepository(db *pgxpool.Pool) ExpenseRepository {
+func NewExpenseRepository(db *pgx.Conn) ExpenseRepository {
 	return &expenseRepository{db: db}
 }
 

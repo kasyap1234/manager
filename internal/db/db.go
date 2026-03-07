@@ -1,5 +1,20 @@
 package db
 
-func NewDB(cfg *Config) (*DB, error) {
+import (
+	"context"
 
+	"github.com/jackc/pgx/v5"
+)
+
+func NewDB(connStr string) (*pgx.Conn, error) {
+
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(ctx)
+	// connect to neon postgresql
+
+	return conn, nil
 }

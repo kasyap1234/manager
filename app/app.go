@@ -12,7 +12,7 @@ import (
 
 type App struct {
 	e        *echo.Echo
-	db       *repository.Repository
+	repo     *repository.Repository
 	config   *config.Config
 	services *service.Service
 	handlers *handler.Handler
@@ -21,12 +21,12 @@ type App struct {
 func New() (*App, error) {
 	cfg := config.NewConfig()
 	e := echo.New()
-
-	db, err := db.NewDB(cfg)
+	connStr := ""
+	database, err := db.NewDB(connStr)
 	if err != nil {
 		return nil, err
 	}
-	repositories := repository.NewRepository(db)
+	repositories := repository.NewRepository(database)
 
 	services := service.NewService(repositories)
 
@@ -34,7 +34,7 @@ func New() (*App, error) {
 
 	a := &App{
 		e:        e,
-		db:       db,
+		repo:     repositories,
 		config:   cfg,
 		services: services,
 		handlers: handlers,
