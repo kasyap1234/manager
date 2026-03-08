@@ -1,18 +1,15 @@
 package handler
 
 import (
-	"fmt"
 	"manager/internal/service"
 )
 
 type Handler struct {
-	services *service.Service
+	expenseHandler *ExpenseHandler
 }
 
 func NewHandler(service *service.Service) *Handler {
-	return &Handler{services: service}
-}
-
-func (h *Handler) Handle() {
-	fmt.Println("Handler initialized")
+	return &Handler{
+		expenseHandler: NewExpenseHandler(service),
+	}
 }
