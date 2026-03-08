@@ -10,6 +10,10 @@ type Repository struct {
 
 func NewRepository(db *pgx.Conn) *Repository {
 	return &Repository{
-		expenseRepo: &expenseRepository{db: db},
+		expenseRepo: NewExpenseRepository(db),
 	}
+}
+
+func (r *Repository) Expense() ExpenseRepository {
+	return r.expenseRepo
 }

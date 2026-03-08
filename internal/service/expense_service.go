@@ -1,70 +1,53 @@
-// Package service
 package service
 
 import (
-	"fmt"
-
 	"manager/internal/model"
 	"manager/internal/parser"
 	"manager/internal/repository"
 )
 
 type ExpenseService struct {
-	expenseRepository repository.ExpenseRepository
-	parser            parser.Parser
+	expenseRepo repository.ExpenseRepository
+	parser      parser.Parser
 }
 
-func NewExpenseService(expenseRepository repository.ExpenseRepository, parser parser.Parser) *ExpenseService {
-	return &ExpenseService{expenseRepository: expenseRepository, parser: parser}
+func NewExpenseService(expenseRepository repository.ExpenseRepository, expenseParser parser.Parser) *ExpenseService {
+	return &ExpenseService{expenseRepo: expenseRepository, parser: expenseParser}
 }
 
 func (s *ExpenseService) GetExpenses() ([]model.Expense, error) {
-	expenses, err := s.expenseRepository.GetExpenses()
-	if err != nil {
-		return nil, err
-	}
-	result := make([]model.Expense, len(expenses))
-	for i, e := range expenses {
-		result[i] = *e
-	}
-	return result, nil
+	return s.expenseRepo.GetExpenses()
 }
 
-func (s *ExpenseService) CreateExpense(sms string) error {
+func (s *ExpenseService) CreateExpense(sms string) (model.Expense, error) {
 	expense, err := s.parser.Parse(sms)
-	if err != nil {
-		return err
-	}
-	return s.expenseRepository.CreateExpense(&expense)
-}
-
-func (s *ExpenseService) UpdateExpense(sms string) error {
-	expense, err := s.parser.Parse(sms)
-	if err != nil {
-		return err
-	}
-	return s.expenseRepository.UpdateExpense(&expense)
-}
-
-func (s *ExpenseService) DeleteExpense(id string) error {
-	expense, err := s.expenseRepository.GetExpenseByID(id)
-	if err != nil {
-		return err
-	}
-	if expense.ID == "" {
-		return fmt.Errorf("expense not found")
-	}
-	return s.expenseRepository.DeleteExpense(expense.ID)
-}
-
-// GetExpenseByID is a method that returns a single expense by its ID
-func (s *ExpenseService) GetExpenseByID(id string) (model.Expense, error) {
-	expense, err := s.expenseRepository.GetExpenseByID(id)
 	if err != nil {
 		return model.Expense{}, err
 	}
-	if expense.ID == "" {
-		return model.Expense{}, fmt.Errorf("expense not found")
+
+	return s.expenseRepo.CreateExpense(expense)
+}
+
+func (s *ExpenseService) UpdateExpense(id string, sms string) (model.Expense, error) {
+	existingExpense, err := s.expenseRepo.GetExpenseByID(id)
+	if err != nil {
+		return model.Expense{}, err
 	}
-	return *expense, nil
+
+	expense, err := s.parser.Parse(sms)
+	if err != nil {
+		return model.Expense{}, err
+	}
+	expense.ID = existingExpense.ID
+	expense.CreatedAt = existingExpense.CreatedAt
+
+	return s.expenseRepo.UpdateExpense(expense)
+}
+
+func (s *ExpenseService) DeleteExpense(id string) error {
+	return s.expenseRepo.DeleteExpense(id)
+}
+
+func (s *ExpenseService) GetExpenseByID(id string) (model.Expense, error) {
+	return s.expenseRepo.GetExpenseByID(id)
 }

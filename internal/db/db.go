@@ -13,9 +13,9 @@ func NewDB(connStr string) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close(ctx)
 	// connect to neon postgresql
 	if err := conn.Ping(ctx); err != nil {
+		conn.Close(ctx)
 		return nil, err
 	}
 
