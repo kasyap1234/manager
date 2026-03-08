@@ -7,7 +7,6 @@ import (
 	"manager/internal/model"
 	"manager/internal/parser"
 	"manager/internal/repository"
-	"manager/pkg/utils"
 )
 
 type ExpenseService struct {
@@ -32,21 +31,19 @@ func (s *ExpenseService) GetExpenses() ([]model.Expense, error) {
 }
 
 func (s *ExpenseService) CreateExpense(sms string) error {
-	transaction, err := s.parser.Parse(sms)
-	expense, err := utils.TransToExpense(transaction)
+	expense, err := s.parser.Parse(sms)
 	if err != nil {
 		return err
 	}
-	return s.expenseRepository.CreateExpense(expense)
+	return s.expenseRepository.CreateExpense(&expense)
 }
 
 func (s *ExpenseService) UpdateExpense(sms string) error {
-	transaction, err := s.parser.Parse(sms)
-	expense, err := utils.TransToExpense(transaction)
+	expense, err := s.parser.Parse(sms)
 	if err != nil {
 		return err
 	}
-	return s.expenseRepository.UpdateExpense(expense)
+	return s.expenseRepository.UpdateExpense(&expense)
 }
 
 func (s *ExpenseService) DeleteExpense(id string) error {

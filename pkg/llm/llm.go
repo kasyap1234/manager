@@ -1,4 +1,4 @@
-// Package llm 
+// Package llm
 package llm
 
 import (
@@ -13,7 +13,7 @@ import (
 )
 
 type CallLLM interface {
-	Call(sms string) (model.Transaction, error)
+	Call(sms string) (model.Expense, error)
 }
 
 type GeminiClient struct {
@@ -35,8 +35,8 @@ func NewGeminiClient(apiKey string) *GeminiClient {
 
 // Call sends the SMS text to the Gemini 3.1 Flash Lite model and
 // parses the response into a Transaction struct.
-func (c *GeminiClient) Call(sms string) (model.Transaction, error) {
-	var tx model.Transaction
+func (c *GeminiClient) Call(sms string) (model.Expense, error) {
+	var tx model.Expense
 
 	if c == nil || c.client == nil {
 		return tx, fmt.Errorf("gemini client is not initialized")
@@ -104,4 +104,3 @@ SMS:
 
 	return tx, nil
 }
-

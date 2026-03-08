@@ -4,6 +4,8 @@ package config
 import (
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -31,9 +33,12 @@ type DBConfig struct {
 }
 
 func NewConfig() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found: %v", err)
+	}
 	aiCfg := AIConfig{
-		APIKey: mustGetEnv("API_KEY"),
-		Model:  getEnvOrDefault("MODEL", "gemini-3.1-flash-lite"),
+		APIKey: mustGetEnv("GEMINI_API_KEY"),
+		Model:  getEnvOrDefault("MODEL", "gemini-3.1-flash-lite-preview"),
 	}
 
 	serverCfg := ServerConfig{
