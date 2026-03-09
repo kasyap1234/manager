@@ -1,3 +1,4 @@
+// Package app
 package app
 
 import (
@@ -9,6 +10,7 @@ import (
 	"manager/internal/repository"
 	"manager/internal/service"
 	"manager/pkg/llm"
+	"os"
 
 	"github.com/labstack/echo/v4"
 )
@@ -24,15 +26,11 @@ type App struct {
 func New() (*App, error) {
 	cfg := config.NewConfig()
 	e := echo.New()
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		cfg.DBConfig.DBUser,
-		cfg.DBConfig.DBPassword,
-		cfg.DBConfig.DBHost,
-		cfg.DBConfig.DBPort,
-		cfg.DBConfig.DBName,
-		cfg.DBConfig.DBSSLMode,
-	)
+	connStr := os.Getenv("DB_CONN_STR")
+	if connStr == "" {
+		return nil, fmt.Errorf("DB_CONN_STR environment variable is not set")
+	}
+	
 	database, err := db.NewDB(connStr)
 	if err != nil {
 		return nil, err
@@ -45,6 +43,7 @@ func New() (*App, error) {
 	services := service.NewService(expenseService)
 
 	handlers := handler.NewHandler(services)
+	handlers.RegisterRoutes(e)
 
 	a := &App{
 		e:        e,
