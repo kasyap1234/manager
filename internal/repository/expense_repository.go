@@ -1,4 +1,4 @@
-// Package repository 
+// Package repository
 package repository
 
 import (
@@ -13,11 +13,11 @@ import (
 var ErrExpenseNotFound = errors.New("expense not found")
 
 type ExpenseRepository interface {
-	GetExpenses() ([]model.Expense, error)
-	CreateExpense(expense model.Expense) (model.Expense, error)
-	UpdateExpense(expense model.Expense) (model.Expense, error)
+	GetExpenses() ([]model.Transaction, error)
+	CreateExpense(expense model.Transaction) (model.Transaction, error)
+	UpdateExpense(expense model.Transaction) (model.Transaction, error)
 	DeleteExpense(id string) error
-	GetExpenseByID(id string) (model.Expense, error)
+	GetExpenseByID(id string) (model.Transaction, error)
 }
 
 type expenseRepository struct {
@@ -28,45 +28,49 @@ func NewExpenseRepository(db *pgx.Conn) ExpenseRepository {
 	return &expenseRepository{db: db}
 }
 
-func (r *expenseRepository) GetExpenses() ([]model.Expense, error) {
-	query := `SELECT id, amount, date, category, description, created_at, updated_at FROM expenses`
+func (r *expenseRepository) GetExpenses() ([]model.Transaction, error) {
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses`
 	rows, err := r.db.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Expense])
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
 }
 
-func (r *expenseRepository) CreateExpense(expense model.Expense) (model.Expense, error) {
-	query := `INSERT INTO expenses (amount, date, category, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, amount, date, category, description, created_at, updated_at`
+func (r *expenseRepository) CreateExpense(expense model.Transaction) (model.Transaction, error) {
+	query := `INSERT INTO expenses (amount, date, merchant,credit,category, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, amount, date, category, description, created_at, updated_at`
 
-	var createdExpense model.Expense
+	var createdExpense model.Transaction
 	err := r.db.QueryRow(context.Background(), query, expense.Amount, expense.Date, expense.Category, expense.Description, expense.CreatedAt, expense.UpdatedAt).Scan(
 		&createdExpense.ID,
 		&createdExpense.Amount,
 		&createdExpense.Date,
+		&createdExpense.Merchant,
+		&createdExpense.Credit,
 		&createdExpense.Category,
 		&createdExpense.Description,
 		&createdExpense.CreatedAt,
 		&createdExpense.UpdatedAt,
 	)
 	if err != nil {
-		return model.Expense{}, err
+		return model.Transaction{}, err
 	}
 
 	return createdExpense, nil
 }
 
-func (r *expenseRepository) UpdateExpense(expense model.Expense) (model.Expense, error) {
+func (r *expenseRepository) UpdateExpense(expense model.Transaction) (model.Transaction, error) {
 	query := `UPDATE expenses SET amount = $1, date = $2, category = $3, description = $4, updated_at = $5 WHERE id = $6 RETURNING id, amount, date, category, description, created_at, updated_at`
 
-	var updatedExpense model.Expense
+	var updatedExpense model.Transaction
 	err := r.db.QueryRow(context.Background(), query, expense.Amount, expense.Date, expense.Category, expense.Description, expense.UpdatedAt, expense.ID).Scan(
 		&updatedExpense.ID,
 		&updatedExpense.Amount,
 		&updatedExpense.Date,
+		&updatedExpense.Merchant,
+		&updatedExpense.Credit,
 		&updatedExpense.Category,
 		&updatedExpense.Description,
 		&updatedExpense.CreatedAt,
@@ -74,9 +78,9 @@ func (r *expenseRepository) UpdateExpense(expense model.Expense) (model.Expense,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return model.Expense{}, ErrExpenseNotFound
+			return model.Transaction{}, ErrExpenseNotFound
 		}
-		return model.Expense{}, err
+		return model.Transaction{}, err
 	}
 
 	return updatedExpense, nil
@@ -94,14 +98,16 @@ func (r *expenseRepository) DeleteExpense(id string) error {
 	return nil
 }
 
-func (r *expenseRepository) GetExpenseByID(id string) (model.Expense, error) {
+func (r *expenseRepository) GetExpenseByID(id string) (model.Transaction, error) {
 	query := `SELECT id, amount, date, category, description, created_at, updated_at FROM expenses WHERE id = $1`
 	row := r.db.QueryRow(context.Background(), query, id)
-	var expense model.Expense
+	var expense model.Transaction
 	err := row.Scan(
 		&expense.ID,
 		&expense.Amount,
 		&expense.Date,
+		&expense.Merchant,
+		&expense.Credit,
 		&expense.Category,
 		&expense.Description,
 		&expense.CreatedAt,
@@ -109,9 +115,9 @@ func (r *expenseRepository) GetExpenseByID(id string) (model.Expense, error) {
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return model.Expense{}, ErrExpenseNotFound
+			return model.Transaction{}, ErrExpenseNotFound
 		}
-		return model.Expense{}, err
+		return model.Transaction{}, err
 	}
 
 	return expense, nil

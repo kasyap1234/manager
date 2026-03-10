@@ -1,4 +1,4 @@
-// Package parser 
+// Package parser
 package parser
 
 import (
@@ -8,7 +8,7 @@ import (
 )
 
 type Parser interface {
-	Parse(sms string) (model.Expense, error)
+	Parse(sms string) (model.Transaction, error)
 }
 
 type SMSParser struct {
@@ -19,14 +19,17 @@ func NewSMSParser(llmClient llm.CallLLM) Parser {
 	return &SMSParser{llmClient: llmClient}
 }
 
-func (p *SMSParser) Parse(sms string) (model.Expense, error) {
+func (p *SMSParser) Parse(sms string) (model.Transaction, error) {
 	response, err := p.llmClient.Call(sms)
 	if err != nil {
-		return model.Expense{}, err
+		return model.Transaction{}, err
 	}
-	expense := model.Expense{
+	expense := model.Transaction{
+		ID:          response.ID,
 		Amount:      response.Amount,
 		Date:        response.Date,
+		Merchant:    response.Merchant,
+		Credit:      response.Credit,
 		Category:    response.Category,
 		Description: response.Description,
 		CreatedAt:   time.Now(),

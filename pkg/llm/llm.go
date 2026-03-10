@@ -51,14 +51,16 @@ You are a financial SMS transaction parser.
 Given the following SMS describing a financial transaction, produce a JSON object
 that matches EXACTLY the following Go struct (field names and types):
 
-type Transaction struct {
-  id          string    // a unique identifier, or empty string if unknown
-  amount      float64   // transaction amount
-  date        time.Time // transaction date
-  category    string    // short category like "groceries", "restaurant"
-  description string    // concise description of the transaction
-  created_at  time.Time // creation timestamp
-  updated_at  time.Time // last update timestamp
+type Expense struct {
+  ID          string    // a unique identifier, or empty string if unknown
+  Amount      float64   // transaction amount
+  Date        time.Time // transaction date
+  Merchant    string    // name of the merchant
+  Credit      bool      // whether the transaction is a credit or debit
+  Category    string    // short category like "groceries", "restaurant"
+  Description string    // concise description of the transaction
+  CreatedAt   time.Time // creation timestamp
+  UpdatedAt   time.Time // last update timestamp
 }
 
 Rules:
