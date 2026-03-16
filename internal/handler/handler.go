@@ -24,4 +24,9 @@ func (h *Handler) RegisterRoutes(e *echo.Echo) {
 	e.GET("/expenses/:id", h.expenseHandler.GetExpenseByID)
 	e.PUT("/expenses", h.expenseHandler.UpdateExpense)
 	e.DELETE("/expenses/:id", h.expenseHandler.DeleteExpense)
+	e.GET("/expenses/category", h.expenseHandler.GetExpensesByCategory)
+	e.GET("/expenses/merchant", h.expenseHandler.GetExpensesByMerchant)
+	e.GET("/expenses/date", h.expenseHandler.GetExpensesByDate)
+	e.GET("/expenses/month", h.expenseHandler.GetExpensesByMonth)
+	e.GET("/expenses/date-range", h.expenseHandler.GetExpensesByDateRange)
 }

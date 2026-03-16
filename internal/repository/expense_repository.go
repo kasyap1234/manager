@@ -4,7 +4,7 @@ package repository
 import (
 	"context"
 	"errors"
-
+	"time"
 	"manager/internal/model"
 
 	"github.com/jackc/pgx/v5"
@@ -18,6 +18,11 @@ type ExpenseRepository interface {
 	UpdateExpense(expense model.Transaction) (model.Transaction, error)
 	DeleteExpense(id string) error
 	GetExpenseByID(id string) (model.Transaction, error)
+	GetExpensesByCategory(category string) ([]model.Transaction, error)
+	GetExpensesByMerchant(merchant string) ([]model.Transaction, error)
+	GetExpensesByDate(date time.Time) ([]model.Transaction, error)
+	GetExpensesByMonth(year, month int) ([]model.Transaction, error)
+	GetExpensesByDateRange(start, end time.Time) ([]model.Transaction, error)
 }
 
 type expenseRepository struct {
@@ -122,3 +127,65 @@ func (r *expenseRepository) GetExpenseByID(id string) (model.Transaction, error)
 
 	return expense, nil
 }
+
+
+func(r*expenseRepository)GetExpensesByCategory(category string) ([]model.Transaction, error) {	
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses WHERE category = $1`
+	rows, err := r.db.Query(context.Background(), query, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+func(r*expenseRepository)GetExpensesByMerchant(merchant string) ([]model.Transaction, error) {
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses WHERE merchant = $1`
+	rows, err := r.db.Query(context.Background(), query, merchant)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+func(r*expenseRepository)GetExpensesByDate(date time.Time) ([]model.Transaction, error) {
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses WHERE date = $1`
+	rows, err := r.db.Query(context.Background(), query, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+
+func(r*expenseRepository)GetExpensesByMonth(year , month int) ([]model.Transaction, error) {
+    start :=time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	end :=start.AddDate(0, 1, 0)
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses WHERE date >= $1 AND date < $2`
+	rows, err := r.db.Query(context.Background(), query, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+
+func(r*expenseRepository)GetExpensesByDateRange(start,end time.Time) ([]model.Transaction, error) {
+	query := `SELECT id, amount, date, merchant, credit,category, description, created_at, updated_at FROM expenses WHERE date >= $1 AND date < $2`
+	rows, err := r.db.Query(context.Background(), query, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+

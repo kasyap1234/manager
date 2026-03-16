@@ -13,7 +13,7 @@ import (
 )
 
 type CallLLM interface {
-	Call(sms string) (model.Expense, error)
+	Call(sms string) (model.Transaction, error)
 }
 
 type GeminiClient struct {
@@ -35,8 +35,8 @@ func NewGeminiClient(apiKey string) *GeminiClient {
 
 // Call sends the SMS text to the Gemini 3.1 Flash Lite model and
 // parses the response into a Transaction struct.
-func (c *GeminiClient) Call(sms string) (model.Expense, error) {
-	var tx model.Expense
+func (c *GeminiClient) Call(sms string) (model.Transaction, error) {
+	var tx model.Transaction
 
 	if c == nil || c.client == nil {
 		return tx, fmt.Errorf("gemini client is not initialized")
@@ -47,14 +47,17 @@ func (c *GeminiClient) Call(sms string) (model.Expense, error) {
 	// Prompt Gemini to return ONLY a JSON object matching model.Transaction.
 	prompt := `
 You are a financial SMS transaction parser.
+if the sms is not a transaction, return an empty JSON object.
 
 Given the following SMS describing a financial transaction, produce a JSON object
 that matches EXACTLY the following Go struct (field names and types):
 
-type Expense struct {
+type Transaction struct {
   ID          string    // a unique identifier, or empty string if unknown
   Amount      float64   // transaction amount
   Date        time.Time // transaction date
+  Merchant    string    // name of the merchant
+  Credit      bool      // whether the transaction is a credit or debit
   Merchant    string    // name of the merchant
   Credit      bool      // whether the transaction is a credit or debit
   Category    string    // short category like "groceries", "restaurant"
@@ -62,6 +65,8 @@ type Expense struct {
   CreatedAt   time.Time // creation timestamp
   UpdatedAt   time.Time // last update timestamp
 }
+This is additional context for relevant transactions : 
+	raise securities is dhan app category : investment . 
 
 Rules:
 - All timestamps (date, created_at, updated_at) MUST be RFC3339 strings, e.g. "2006-01-02T15:04:05Z".
@@ -69,7 +74,7 @@ Rules:
 - Use only these 7 fields and no others.
 
 Respond with ONLY a single JSON object using these exact JSON keys:
-id, amount, date, category, description, created_at, updated_at.
+id, amount, date, merchant, credit, category, description, created_at, updated_at.
 Do not include any additional text before or after the JSON.
 
 SMS:

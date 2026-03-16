@@ -4,6 +4,7 @@ import (
 	"manager/internal/model"
 	"manager/internal/parser"
 	"manager/internal/repository"
+	"time"
 )
 
 type ExpenseService struct {
@@ -50,4 +51,26 @@ func (s *ExpenseService) DeleteExpense(id string) error {
 
 func (s *ExpenseService) GetExpenseByID(id string) (model.Transaction, error) {
 	return s.expenseRepo.GetExpenseByID(id)
+}
+
+
+func (s *ExpenseService) GetExpensesByCategory(category string) ([]model.Transaction, error) {
+	return s.expenseRepo.GetExpensesByCategory(category)
+}
+
+func (s *ExpenseService) GetExpensesByMerchant(merchant string) ([]model.Transaction, error) {
+	return s.expenseRepo.GetExpensesByMerchant(merchant)
+}
+
+func (s *ExpenseService) GetExpensesByDate(date time.Time) ([]model.Transaction, error) {
+	return s.expenseRepo.GetExpensesByDate(date)
+}
+
+
+func (s *ExpenseService) GetExpensesByMonth(year, month int) ([]model.Transaction, error) {
+	return s.expenseRepo.GetExpensesByMonth(year, month)
+}
+
+func (s *ExpenseService) GetExpensesByDateRange(start, end time.Time) ([]model.Transaction, error) {
+	return s.expenseRepo.GetExpensesByDateRange(start, end)
 }
