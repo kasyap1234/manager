@@ -7,26 +7,28 @@ import (
 )
 
 type Handler struct {
-
+	healthHandler  *HealthHandler
 	expenseHandler *ExpenseHandler
 }
 
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
-
+		
 		expenseHandler: NewExpenseHandler(service),
 	}
 }
 
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
-	e.POST("/expenses", h.expenseHandler.AddExpense)
-	e.GET("/expenses", h.expenseHandler.GetExpenses)
-	e.GET("/expenses/:id", h.expenseHandler.GetExpenseByID)
-	e.PUT("/expenses", h.expenseHandler.UpdateExpense)
-	e.DELETE("/expenses/:id", h.expenseHandler.DeleteExpense)
-	e.GET("/expenses/category", h.expenseHandler.GetExpensesByCategory)
-	e.GET("/expenses/merchant", h.expenseHandler.GetExpensesByMerchant)
-	e.GET("/expenses/date", h.expenseHandler.GetExpensesByDate)
-	e.GET("/expenses/month", h.expenseHandler.GetExpensesByMonth)
-	e.GET("/expenses/date-range", h.expenseHandler.GetExpensesByDateRange)
+	expenses:=e.Group("/expenses")
+	e.GET("/",h.healthHandler.CheckHealth)
+	expenses.POST("/expenses", h.expenseHandler.AddExpense)
+	expenses.GET("", h.expenseHandler.GetExpenses)
+	expenses.GET("/:id", h.expenseHandler.GetExpenseByID)
+	expenses.PUT("/:id", h.expenseHandler.UpdateExpense)
+	expenses.DELETE("/:id", h.expenseHandler.DeleteExpense)
+	expenses.GET("/category", h.expenseHandler.GetExpensesByCategory)
+	expenses.GET("/merchant", h.expenseHandler.GetExpensesByMerchant)
+	expenses.GET("/date", h.expenseHandler.GetExpensesByDate)
+	expenses.GET("/month", h.expenseHandler.GetExpensesByMonth)
+	expenses.GET("/date-range", h.expenseHandler.GetExpensesByDateRange)
 }

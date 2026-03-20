@@ -1,11 +1,20 @@
 package main
 
-import "manager/app"
+import (
+	"fmt"
+	"log"
+
+	"manager/app"
+)
 
 func main() {
 	app, err := app.New()
 	if err != nil {
 		panic(err)
 	}
-	app.Run()
+
+	if err := app.Run(); err != nil {
+		log.Fatal("error running the app")
+	}
+	fmt.Print("app started")
 }

@@ -3,6 +3,8 @@ package app
 
 import (
 	"fmt"
+	"os"
+
 	"manager/internal/config"
 	"manager/internal/db"
 	"manager/internal/handler"
@@ -10,7 +12,6 @@ import (
 	"manager/internal/repository"
 	"manager/internal/service"
 	"manager/pkg/llm"
-	"os"
 
 	"github.com/labstack/echo/v4"
 )
@@ -30,7 +31,7 @@ func New() (*App, error) {
 	if connStr == "" {
 		return nil, fmt.Errorf("DB_CONN_STR environment variable is not set")
 	}
-	
+
 	database, err := db.NewDB(connStr)
 	if err != nil {
 		return nil, err
@@ -54,6 +55,9 @@ func New() (*App, error) {
 	}
 	return a, nil
 }
+
 func (a *App) Run() error {
+	fmt.Printf("server starting on port %s\n", a.config.ServerConfig.Port)
+
 	return a.e.Start(a.config.ServerConfig.Port)
 }

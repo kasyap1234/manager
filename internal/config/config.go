@@ -24,16 +24,11 @@ type AIConfig struct {
 }
 
 type DBConfig struct {
-	DBName     string
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBSSLMode  string
+	ConnStr string
 }
 
 func NewConfig() *Config {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Printf("No .env file found: %v", err)
 	}
 	aiCfg := AIConfig{
@@ -46,12 +41,7 @@ func NewConfig() *Config {
 	}
 
 	dbCfg := DBConfig{
-		DBName:     mustGetEnv("DB_NAME"),
-		DBUser:     mustGetEnv("DB_USER"),
-		DBPassword: mustGetEnv("DB_PASSWORD"),
-		DBHost:     mustGetEnv("DB_HOST"),
-		DBPort:     mustGetEnv("DB_PORT"),
-		DBSSLMode:  mustGetEnv("DB_SSL_MODE"),
+		ConnStr: mustGetEnv("DB_CONN_STR"),
 	}
 	return &Config{
 		ServerConfig: serverCfg,
