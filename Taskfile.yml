@@ -56,41 +56,61 @@ tasks:
           echo "Error: MIGRATION_NAME is required. Usage: task migrate-create MIGRATION_NAME=create_users_table"
           exit 1
         fi
-      - goose -dir {{.MIGRATION_DIR}} create -seq {{.MIGRATION_NAME}} sql
+      - goose -dir {{.MIGRATION_DIR}} create -s {{.MIGRATION_NAME}} sql
     requires:
       vars: [MIGRATION_NAME]
 
   migrate-up:
     desc: Run Goose migrate up command
     cmds:
-      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" up
-    preconditions:
-      - sh: test -n "{{.DB_STRING}}"
-        msg: "Error: DB_STRING environment variable must be set"
+      - |
+        set -a
+        . ".env"
+        set +a
+        if [ -z "${DB_CONN_STR:-}" ]; then
+          echo "Error: DB_CONN_STR must be set in .env"
+          exit 1
+        fi
+        goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "${DB_CONN_STR}" up
 
   migrate-down:
     desc: Run Goose migrate down command
     cmds:
-      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" down
-    preconditions:
-      - sh: test -n "{{.DB_STRING}}"
-        msg: "Error: DB_STRING environment variable must be set"
+      - |
+        set -a
+        . ".env"
+        set +a
+        if [ -z "${DB_CONN_STR:-}" ]; then
+          echo "Error: DB_CONN_STR must be set in .env"
+          exit 1
+        fi
+        goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "${DB_CONN_STR}" down
 
   migrate-status:
     desc: Check Goose migration status
     cmds:
-      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" status
-    preconditions:
-      - sh: test -n "{{.DB_STRING}}"
-        msg: "Error: DB_STRING environment variable must be set"
+      - |
+        set -a
+        . ".env"
+        set +a
+        if [ -z "${DB_CONN_STR:-}" ]; then
+          echo "Error: DB_CONN_STR must be set in .env"
+          exit 1
+        fi
+        goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "${DB_CONN_STR}" status
 
   migrate-reset:
     desc: Rollback all migrations and re-run them
     cmds:
-      - goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "{{.DB_STRING}}" reset
-    preconditions:
-      - sh: test -n "{{.DB_STRING}}"
-        msg: "Error: DB_STRING environment variable must be set"
+      - |
+        set -a
+        . ".env"
+        set +a
+        if [ -z "${DB_CONN_STR:-}" ]; then
+          echo "Error: DB_CONN_STR must be set in .env"
+          exit 1
+        fi
+        goose -dir {{.MIGRATION_DIR}} {{.DB_DRIVER}} "${DB_CONN_STR}" reset
 
   # Development tasks
   dev:

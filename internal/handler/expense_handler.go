@@ -11,29 +11,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type ExpenseHandler struct {
+type TransactionHandler struct {
 	service *service.Service
 }
 
-type addExpenseRequest struct {
+type addTransactionRequest struct {
 	SMS string `json:"sms"`
 }
 
-type UpdateExpenseRequest struct {
+type UpdateTransactionRequest struct {
 	ID  string `json:"ID"`
 	SMS string `json:"sms"`
 }
 
-const expenseDateLayout = "2006-01-02"
+const transactionDateLayout = "2006-01-02"
 
-func NewExpenseHandler(service *service.Service) *ExpenseHandler {
-	return &ExpenseHandler{
+func NewTransactionHandler(service *service.Service) *TransactionHandler {
+	return &TransactionHandler{
 		service: service,
 	}
 }
 
-func (e *ExpenseHandler) AddExpense(c echo.Context) error {
-	var req addExpenseRequest
+func (e *TransactionHandler) AddTransaction(c echo.Context) error {
+	var req addTransactionRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -41,16 +41,16 @@ func (e *ExpenseHandler) AddExpense(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "sms is required"})
 	}
 
-	expense, err := e.service.Expense().CreateExpense(req.SMS)
+	transaction, err := e.service.Transaction().CreateTransaction(req.SMS)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, expense)
+	return c.JSON(http.StatusCreated, transaction)
 }
 
-func (e *ExpenseHandler) UpdateExpense(c echo.Context) error {
-	var req UpdateExpenseRequest
+func (e *TransactionHandler) UpdateTransaction(c echo.Context) error {
+	var req UpdateTransactionRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -58,30 +58,30 @@ func (e *ExpenseHandler) UpdateExpense(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id and sms are required"})
 	}
 
-	expense, err := e.service.Expense().UpdateExpense(req.ID, req.SMS)
+	transaction, err := e.service.Transaction().UpdateTransaction(req.ID, req.SMS)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, expense)
+		return c.JSON(http.StatusOK, transaction)
 }
 
-func (e *ExpenseHandler) GetExpenses(c echo.Context) error {
-	expenses, err := e.service.Expense().GetExpenses()
+func (e *TransactionHandler) GetTransactions(c echo.Context) error {
+	transactions, err := e.service.Transaction().GetTransactions()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, expenses)
+	return c.JSON(http.StatusOK, transactions)
 }
 
-func (e *ExpenseHandler) DeleteExpense(c echo.Context) error {
+func (e *TransactionHandler) DeleteTransaction(c echo.Context) error {
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
 	}
 
-	err := e.service.Expense().DeleteExpense(id)
+	err := e.service.Transaction().DeleteTransaction(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -89,65 +89,65 @@ func (e *ExpenseHandler) DeleteExpense(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-func (e *ExpenseHandler) GetExpenseByID(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionByID(c echo.Context) error {
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
 	}
 
-	expense, err := e.service.Expense().GetExpenseByID(id)
+	transaction, err := e.service.Transaction().GetTransactionByID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, expense)
+	return c.JSON(http.StatusOK, transaction)
 }
 
 
-func (e *ExpenseHandler) GetExpensesByCategory(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionsByCategory(c echo.Context) error {
 	category := c.QueryParam("category")
 	if category == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "category is required"})
 	}
 
-	expenses, err := e.service.Expense().GetExpensesByCategory(category)
+	transactions, err := e.service.Transaction().GetTransactionsByCategory(category)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, expenses)
+	return c.JSON(http.StatusOK, transactions)
 }
 
-func (e *ExpenseHandler) GetExpensesByMerchant(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionsByMerchant(c echo.Context) error {
 	merchant := c.QueryParam("merchant")
 	if merchant == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "merchant is required"})
 	}
 
-	expenses, err := e.service.Expense().GetExpensesByMerchant(merchant)
+	transactions, err := e.service.Transaction().GetTransactionsByMerchant(merchant)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, expenses)
+	return c.JSON(http.StatusOK, transactions)
 }
 
-func (e *ExpenseHandler) GetExpensesByDate(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionsByDate(c echo.Context) error {
 	dateString := c.QueryParam("date")
 	if dateString == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "date is required"})
 	}
-	date, err := time.Parse(expenseDateLayout, dateString)
+	date, err := time.Parse(transactionDateLayout, dateString)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "date must be in YYYY-MM-DD format"})
 	}
 
-	expenses, err := e.service.Expense().GetExpensesByDate(date)
+	transactions, err := e.service.Transaction().GetTransactionsByDate(date)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, expenses)
+	return c.JSON(http.StatusOK, transactions)
 }
 
-func (e *ExpenseHandler) GetExpensesByMonth(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionsByMonth(c echo.Context) error {
 	yearString := c.QueryParam("year")
 	monthString := c.QueryParam("month")
 	if yearString == "" || monthString == "" {
@@ -162,25 +162,25 @@ func (e *ExpenseHandler) GetExpensesByMonth(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "month must be an integer between 1 and 12"})
 	}
 
-	expenses, err := e.service.Expense().GetExpensesByMonth(year, month)
+	transactions, err := e.service.Transaction().GetTransactionsByMonth(year, month)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, expenses)
+	return c.JSON(http.StatusOK, transactions)
 }
 
 
-func (e *ExpenseHandler) GetExpensesByDateRange(c echo.Context) error {
+func (e *TransactionHandler) GetTransactionsByDateRange(c echo.Context) error {
 	startString := c.QueryParam("start")
 	endString := c.QueryParam("end")
 	if startString == "" || endString == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "start and end are required"})
 	}
-	start, err := time.Parse(expenseDateLayout, startString)
+	start, err := time.Parse(transactionDateLayout, startString)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "start must be in YYYY-MM-DD format"})
 	}
-	end, err := time.Parse(expenseDateLayout, endString)
+		end, err := time.Parse(transactionDateLayout, endString)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "end must be in YYYY-MM-DD format"})
 	}
@@ -188,9 +188,9 @@ func (e *ExpenseHandler) GetExpensesByDateRange(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "end must be after start"})
 	}
 
-	expenses, err := e.service.Expense().GetExpensesByDateRange(start, end)
+	transactions, err := e.service.Transaction().GetTransactionsByDateRange(start, end)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, expenses)
+		return c.JSON(http.StatusOK, transactions)
 }

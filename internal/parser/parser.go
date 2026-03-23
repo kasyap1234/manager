@@ -24,7 +24,7 @@ func (p *SMSParser) Parse(sms string) (model.Transaction, error) {
 	if err != nil {
 		return model.Transaction{}, err
 	}
-	expense := model.Transaction{
+	transaction := model.Transaction{
 		ID:          response.ID,
 		Amount:      response.Amount,
 		Date:        response.Date,
@@ -35,5 +35,5 @@ func (p *SMSParser) Parse(sms string) (model.Transaction, error) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	return expense, nil
+	return transaction, nil
 }

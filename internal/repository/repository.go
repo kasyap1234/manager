@@ -5,15 +5,15 @@ import (
 )
 
 type Repository struct {
-	expenseRepo ExpenseRepository
+	transactionRepo TransactionRepository
 }
 
 func NewRepository(db *pgx.Conn) *Repository {
 	return &Repository{
-		expenseRepo: NewExpenseRepository(db),
+		transactionRepo: NewTransactionRepository(db),
 	}
 }
 
-func (r *Repository) Expense() ExpenseRepository {
-	return r.expenseRepo
+		func (r *Repository) Transaction() TransactionRepository {
+			return r.transactionRepo
 }
