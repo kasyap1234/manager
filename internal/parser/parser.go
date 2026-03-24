@@ -2,9 +2,10 @@
 package parser
 
 import (
+	"time"
+
 	"manager/internal/model"
 	"manager/pkg/llm"
-	"time"
 )
 
 type Parser interface {
@@ -24,16 +25,19 @@ func (p *SMSParser) Parse(sms string) (model.Transaction, error) {
 	if err != nil {
 		return model.Transaction{}, err
 	}
+
+	now := time.Now()
 	transaction := model.Transaction{
 		ID:          response.ID,
 		Amount:      response.Amount,
 		Date:        response.Date,
 		Merchant:    response.Merchant,
 		Credit:      response.Credit,
+		Medium:      response.Medium,
 		Category:    response.Category,
 		Description: response.Description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 	return transaction, nil
 }

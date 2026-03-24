@@ -37,11 +37,10 @@ func New() (*App, error) {
 		return nil, err
 	}
 	repositories := repository.NewRepository(database)
-	llmClient := llm.NewGeminiClient(cfg.AIConfig.APIKey)
-	expenseParser := parser.NewSMSParser(llmClient)
-	expenseService := service.NewExpenseService(repositories.Expense(), expenseParser)
-
-	services := service.NewService(expenseService)
+	geminiClient := llm.NewLLMClient(cfg.AIConfig.APIKey)
+	transactionParser := parser.NewSMSParser(geminiClient)
+	transactionService := service.NewTransactionService(repositories.Transaction(), transactionParser)
+	services := service.NewService(transactionService)
 
 	handlers := handler.NewHandler(services)
 	handlers.RegisterRoutes(e)

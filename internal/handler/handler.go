@@ -7,21 +7,21 @@ import (
 )
 
 type Handler struct {
-	healthHandler  *HealthHandler
+	healthHandler      *HealthHandler
 	transactionHandler *TransactionHandler
 }
 
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
-		healthHandler: NewHealthHandler(),
-		transactionHandler: NewtransactionHandler(service),
+		healthHandler:      NewHealthHandler(),
+		transactionHandler: NewTransactionHandler(service),
 	}
 }
 
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
-	transactions:=e.Group("/transactions")
-	e.GET("/",h.healthHandler.CheckHealth)
-	transactions.POST("/transactions", h.transactionHandler.AddTransaction)
+	transactions := e.Group("/transactions")
+	e.GET("/", h.healthHandler.CheckHealth)
+	transactions.POST("", h.transactionHandler.AddTransaction)
 	transactions.GET("", h.transactionHandler.GetTransactions)
 	transactions.GET("/:id", h.transactionHandler.GetTransactionByID)
 	transactions.PUT("/:id", h.transactionHandler.UpdateTransaction)

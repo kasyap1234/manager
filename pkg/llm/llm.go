@@ -16,11 +16,11 @@ type CallLLM interface {
 	Call(sms string) (model.Transaction, error)
 }
 
-type GeminiClient struct {
+type LLMClient struct {
 	client *genai.Client
 }
 
-func NewGeminiClient(apiKey string) *GeminiClient {
+func NewLLMClient(apiKey string) *LLMClient {
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
 		APIKey:  apiKey,
 		Backend: genai.BackendGeminiAPI,
@@ -28,14 +28,14 @@ func NewGeminiClient(apiKey string) *GeminiClient {
 	if err != nil {
 		return nil
 	}
-	return &GeminiClient{
+	return &LLMClient{
 		client: client,
 	}
 }
 
 // Call sends the SMS text to the Gemini 3.1 Flash Lite model and
 // parses the response into a Transaction struct.
-func (c *GeminiClient) Call(sms string) (model.Transaction, error) {
+func (c *LLMClient) Call(sms string) (model.Transaction, error) {
 	var tx model.Transaction
 
 	if c == nil || c.client == nil {
@@ -58,23 +58,29 @@ type Transaction struct {
   Date        time.Time // transaction date
   Merchant    string    // name of the merchant
   Credit      bool      // whether the transaction is a credit or debit
-  Merchant    string    // name of the merchant
-  Credit      bool      // whether the transaction is a credit or debit
+  Medium      string    // mode of transaction: "upi", "imps", "neft", "rtgs", "card", "cash", "netbanking", "wallet". For card, include bank name like "hdfc card", "sbi card", etc.
   Category    string    // short category like "groceries", "restaurant"
   Description string    // concise description of the transaction
   CreatedAt   time.Time // creation timestamp
   UpdatedAt   time.Time // last update timestamp
 }
-This is additional context for relevant transactions : 
-	raise securities is dhan app category : investment . 
 
 Rules:
+- Medium should identify HOW the transaction was made:
+  - For UPI: "upi" (e.g., "UPI payment to merchant", "UPI transaction")
+  - For IMPS/NEFT/RTGS: "imps", "neft", "rtgs" (e.g., "IMPS to account", "NEFT transfer")
+  - For Debit/Credit Card: include bank name like "hdfc card", "sbi card", "icici card", "yes bank card" (e.g., "spent on hdfc card", "purchase on sbi card")
+  - For ATM: "cash" or "atm"
+  - For Net Banking: "netbanking"
+  - For Wallet: "wallet" (e.g., "paytm wallet", "phonepe wallet")
+  - For Cash: "cash"
+  - Default to "unknown" if not clear
 - All timestamps (date, created_at, updated_at) MUST be RFC3339 strings, e.g. "2006-01-02T15:04:05Z".
 - If you don't know a value, make a reasonable guess rather than leaving it null.
-- Use only these 7 fields and no others.
+- Use only these 8 fields and no others.
 
 Respond with ONLY a single JSON object using these exact JSON keys:
-id, amount, date, merchant, credit, category, description, created_at, updated_at.
+id, amount, date, merchant, credit, medium, category, description, created_at, updated_at.
 Do not include any additional text before or after the JSON.
 
 SMS:

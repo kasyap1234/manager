@@ -1,16 +1,16 @@
-// Package service 
+// Package service
 package service
 
 type Service struct {
-	expenseSvc *ExpenseService
+	transactionSvc *TransactionService
 }
 
-func NewService(expenseSvc *ExpenseService) *Service {
+func NewService(transactionSvc *TransactionService) *Service {
 	return &Service{
-		expenseSvc: expenseSvc,
+		transactionSvc: transactionSvc,
 	}
 }
 
-func (s *Service) Expense() *ExpenseService {
-	return s.expenseSvc
+func (s *Service) Transaction() *TransactionService {
+	return s.transactionSvc
 }

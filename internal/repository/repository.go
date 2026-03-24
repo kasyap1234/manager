@@ -14,6 +14,6 @@ func NewRepository(db *pgx.Conn) *Repository {
 	}
 }
 
-		func (r *Repository) Transaction() TransactionRepository {
-			return r.transactionRepo
+func (r *Repository) Transaction() TransactionRepository {
+	return r.transactionRepo
 }

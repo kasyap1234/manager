@@ -9,6 +9,7 @@ type Transaction struct {
 	Date        time.Time `json:"date"`
 	Merchant    string    `json:"merchant"`
 	Credit      bool      `json:"credit"`
+	Medium      string    `json:"medium"`
 	Category    string    `json:"category"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
