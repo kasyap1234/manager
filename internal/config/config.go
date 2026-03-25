@@ -37,7 +37,7 @@ func NewConfig() *Config {
 	}
 
 	serverCfg := ServerConfig{
-		Port: getEnvOrDefault("PORT", "8080"),
+		Port: getEnvOrDefault("PORT", ":8080"),
 	}
 
 	dbCfg := DBConfig{

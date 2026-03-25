@@ -14,7 +14,7 @@ func main() {
 	}
 
 	if err := app.Run(); err != nil {
-		log.Fatal("error running the app")
+		log.Printf("error running the app: %v", err)
 	}
 	fmt.Print("app started")
 }
