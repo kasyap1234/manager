@@ -4,7 +4,7 @@ package model
 import "time"
 
 type Transaction struct {
-	ID          string    `json:"id"`
+	ID          string    `json:"id"` 
 	Amount      float64   `json:"amount"`
 	Date        time.Time `json:"date"`
 	Merchant    string    `json:"merchant"`

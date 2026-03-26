@@ -78,3 +78,7 @@ func (s *TransactionService) GetTransactionsByMonth(year, month int) ([]model.Tr
 func (s *TransactionService) GetTransactionsByDateRange(start, end time.Time) ([]model.Transaction, error) {
 	return s.transactionRepo.GetTransactionsByDateRange(start, end)
 }
+
+func (s *TransactionService) GetTransactionsByMedium(medium string) ([]model.Transaction, error) {
+	return s.transactionRepo.GetTransactionByMedium(medium)
+}

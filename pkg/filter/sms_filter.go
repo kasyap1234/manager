@@ -1,4 +1,3 @@
-// Package filter
 package filter
 
 import (
@@ -7,85 +6,83 @@ import (
 )
 
 var (
-	excludePatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)\b(otp|otp\s*\d+)\b`),
-		regexp.MustCompile(`(?i)\b(cdsl|nsdl)\b`),
-		regexp.MustCompile(`(?i)\b(refund|reversal)\b.*?(pending|initiated|processing)`),
-		regexp.MustCompile(`(?i)^.*?(loan|credit\s*card|payment)\s*due.*$`),
-		regexp.MustCompile(`(?i)\b(failed|declined|unsuccessful)\b`),
-		regexp.MustCompile(`(?i)\b(mpin|mpin\s*changed)\b`),
+	strictNonTransactionPatterns = []*regexp.Regexp{
+		regexp.MustCompile(`(?i)\b(?:otp|passcode|pin|cvv|cvc|verification\s*code|one\s*time\s*password)\b`),
+		regexp.MustCompile(`(?i)\b(?:login|logged\s*in|sign\s*in|sign-in|new\s*device|device\s*change)\b`),
+		regexp.MustCompile(`(?i)\b(?:offer|offers|sale|discount|cashback|reward|rewards|win|lucky\s*draw|contest|promotion|promo|coupon)\b`),
+		regexp.MustCompile(`(?i)\b(?:kyc|re-?kyc|pan\s*update|aadhaar\s*update|profile\s*update)\b`),
+		regexp.MustCompile(`(?i)\b(?:monthly\s*statement|mini\s*statement|e-?statement|statement\s*is\s*ready|account\s*summary)\b`),
+		regexp.MustCompile(`(?i)\b(?:loan\s*due|emi\s*due|premium\s*due|subscription\s*renewal|bill\s*due|payment\s*reminder|credit\s*score)\b`),
+		regexp.MustCompile(`(?i)\b(?:survey|feedback|download\s*the\s*app|install\s*the\s*app|refer\s*and\s*earn)\b`),
 	}
-	transactionIndicators = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)\b(debited|credited)\b`),
-		regexp.MustCompile(`(?i)\b(spent|paid)\b`),
-		regexp.MustCompile(`(?i)\b(upi\s*(payment|transfer|transaction|sent|received))\b`),
-		regexp.MustCompile(`(?i)\b(imps|neft|rtgs|upi)\b`),
-		regexp.MustCompile(`(?i)\b(card\s*(payment|purchase|transaction|swipe))\b`),
-		regexp.MustCompile(`(?i)\b(wallet\s*(credit|debit|load|add))\b`),
-		regexp.MustCompile(`(?i)\b(acct?|a/?c)\s*(no?|number)?\s*[:\-]?\s*[\dx]{8,}`),
-		regexp.MustCompile(`(?i)\b(rs\.?|inr|₹)\s*[\d,]+(\.\d{2})?\b`),
-		regexp.MustCompile(`(?i)\bagainst\s+your\s+(acct?|a/?c)\b`),
-		regexp.MustCompile(`(?i)\b(transfer\s*(of|to|from))\b`),
-		regexp.MustCompile(`(?i)\breceived\s+(?:rs\.?|inr|₹)\b`),
-		regexp.MustCompile(`(?i)\bsent\s+to\b`),
-		regexp.MustCompile(`(?i)\breceived\s+from\b`),
+	strongTransactionPatterns = []*regexp.Regexp{
+		regexp.MustCompile(`(?i)\b(?:debited|credited|deducted|withdrawn|withdrawal|transferred|transfer|paid|spent|refunded|reversal|reversed|received|deposited|charged|purchase|payment|sent)\b`),
+		regexp.MustCompile(`(?i)\b(?:upi|imps|neft|rtgs|atm|card|wallet|net\s*banking|netbanking|ach|ecs|nach|cash)\b`),
+	}
+	transactionContextPatterns = []*regexp.Regexp{
+		regexp.MustCompile(`(?i)\b(?:rs\.?|inr|₹)\s*[\d,]+(?:\.\d{2})?\b`),
+		regexp.MustCompile(`(?i)\b(?:a\/c|acct?|account|acct\.|card)\b`),
+		regexp.MustCompile(`(?i)\b(?:available\s*balance|avl\.?\s*bal|ledger\s*balance|balance\s*(?:after|is|left))\b`),
+		regexp.MustCompile(`(?i)\b(?:txn|transaction|ref|rrn|utr)\b`),
+		regexp.MustCompile(`(?i)\b(?:merchant|payee|beneficiary|recipient|sender|from\s+your|to\s+your|at\s+[a-z])\b`),
 	}
 )
 
-func isTransactionSMS(sms string) bool {
-	text := strings.TrimSpace(sms)
+func IsTransactionSMS(sms string) bool {
+	text := normalizeSMS(sms)
 	if text == "" {
 		return false
 	}
 
-	lowerText := strings.ToLower(text)
+	txScore := 0
+	txScore += scoreMatches(text, strongTransactionPatterns, 2)
+	txScore += scoreMatches(text, transactionContextPatterns, 1)
 
-	for _, pattern := range excludePatterns {
-		if pattern.MatchString(lowerText) {
-			return false
-		}
+	if txScore == 0 {
+		return false
 	}
 
-	hasTransactionIndicator := false
-	for _, pattern := range transactionIndicators {
-		if pattern.MatchString(lowerText) {
-			hasTransactionIndicator = true
-			break
-		}
+	nonTxScore := scoreMatches(text, strictNonTransactionPatterns, 2)
+	if nonTxScore >= 4 && txScore < 5 {
+		return false
+	}
+	if nonTxScore > txScore && txScore < 4 {
+		return false
 	}
 
-	return hasTransactionIndicator
+	return txScore >= 3
 }
 
 func TransCheck(text string) bool {
-	lowerText := strings.ToLower(text)
-	transPatterns := []string{"debited", "spent", "paid", "sent", "deducted"}
-	for _, pattern := range transPatterns {
-		if strings.Contains(lowerText, pattern) {
-			return true
-		}
+	normalized := normalizeSMS(text)
+	if normalized == "" {
+		return false
 	}
-	return false
+
+	verbPattern := regexp.MustCompile(`(?i)\b(?:debited|credited|paid|spent|sent|deducted|transferred|received)\b`)
+	return verbPattern.MatchString(normalized)
 }
 
 func CreditCheck(text string) bool {
-	lowerText := strings.ToLower(text)
-	creditPatterns := []string{"credited", "received", "deposited", "refund", "credited to"}
-	for _, pattern := range creditPatterns {
-		if strings.Contains(lowerText, pattern) {
-			return true
+	normalized := normalizeSMS(text)
+	if normalized == "" {
+		return false
+	}
+
+	creditPattern := regexp.MustCompile(`(?i)\b(?:credited|received|deposited|refund|reversal|reversed)\b`)
+	return creditPattern.MatchString(normalized)
+}
+
+func normalizeSMS(s string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(strings.ToLower(s))), " ")
+}
+
+func scoreMatches(text string, patterns []*regexp.Regexp, weight int) int {
+	score := 0
+	for _, pattern := range patterns {
+		if pattern.MatchString(text) {
+			score += weight
 		}
 	}
-	return false
-}
-
-func isCDSL(text string) bool {
-	lowerText := strings.ToLower(text)
-	return strings.Contains(lowerText, "cdsl") || strings.Contains(lowerText, "nsdl")
-}
-
-func isOTP(text string) bool {
-	lowerText := strings.ToLower(text)
-	otpPattern := regexp.MustCompile(`(?i)\botp\b|\botp\s*\d{4,6}\b`)
-	return otpPattern.MatchString(lowerText)
+	return score
 }

@@ -2,10 +2,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
+	"manager/internal/parser"
 	"manager/internal/service"
 
 	"github.com/labstack/echo/v4"
@@ -43,6 +45,9 @@ func (e *TransactionHandler) AddTransaction(c echo.Context) error {
 
 	transaction, err := e.service.Transaction().CreateTransaction(req.SMS)
 	if err != nil {
+		if errors.Is(err, parser.ErrNonTransactionSMS) {
+			return c.JSON(http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -60,10 +65,13 @@ func (e *TransactionHandler) UpdateTransaction(c echo.Context) error {
 
 	transaction, err := e.service.Transaction().UpdateTransaction(req.ID, req.SMS)
 	if err != nil {
+		if errors.Is(err, parser.ErrNonTransactionSMS) {
+			return c.JSON(http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-		return c.JSON(http.StatusOK, transaction)
+	return c.JSON(http.StatusOK, transaction)
 }
 
 func (e *TransactionHandler) GetTransactions(c echo.Context) error {
@@ -102,7 +110,6 @@ func (e *TransactionHandler) GetTransactionByID(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, transaction)
 }
-
 
 func (e *TransactionHandler) GetTransactionsByCategory(c echo.Context) error {
 	category := c.QueryParam("category")
@@ -169,7 +176,6 @@ func (e *TransactionHandler) GetTransactionsByMonth(c echo.Context) error {
 	return c.JSON(http.StatusOK, transactions)
 }
 
-
 func (e *TransactionHandler) GetTransactionsByDateRange(c echo.Context) error {
 	startString := c.QueryParam("start")
 	endString := c.QueryParam("end")
@@ -180,7 +186,7 @@ func (e *TransactionHandler) GetTransactionsByDateRange(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "start must be in YYYY-MM-DD format"})
 	}
-		end, err := time.Parse(transactionDateLayout, endString)
+	end, err := time.Parse(transactionDateLayout, endString)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "end must be in YYYY-MM-DD format"})
 	}
@@ -192,5 +198,18 @@ func (e *TransactionHandler) GetTransactionsByDateRange(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-		return c.JSON(http.StatusOK, transactions)
+	return c.JSON(http.StatusOK, transactions)
+}
+
+func (e *TransactionHandler) GetTransactionsByMedium(c echo.Context) error {
+	medium := c.QueryParam("medium")
+	if medium == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "medium is required"})
+	}
+
+	transactions, err := e.service.Transaction().GetTransactionsByMedium(medium)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, transactions)
 }

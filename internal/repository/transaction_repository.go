@@ -23,6 +23,7 @@ type TransactionRepository interface {
 	GetTransactionsByDate(date time.Time) ([]model.Transaction, error)
 	GetTransactionsByMonth(year, month int) ([]model.Transaction, error)
 	GetTransactionsByDateRange(start, end time.Time) ([]model.Transaction, error)
+	GetTransactionByMedium(medium string) ([]model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -187,3 +188,17 @@ func (r *transactionRepository) GetTransactionsByDateRange(start, end time.Time)
 
 	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
 }
+
+
+func (r *transactionRepository) GetTransactionByMedium(medium string) ([]model.Transaction, error) {
+	query := `SELECT id, amount, date, merchant, credit, medium, category, description, created_at, updated_at FROM transactions WHERE medium = $1`
+	rows, err := r.db.Query(context.Background(), query, medium)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[model.Transaction])
+}
+
+

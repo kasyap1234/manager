@@ -2,26 +2,39 @@
 package parser
 
 import (
+	"errors"
 	"time"
 
 	"manager/internal/model"
-	"manager/pkg/llm"
+	"manager/pkg/filter"
+	"manager/pkg/redact"
 )
 
 type Parser interface {
 	Parse(sms string) (model.Transaction, error)
 }
 
-type SMSParser struct {
-	llmClient llm.CallLLM
+type CallLLM interface {
+	Call(sms string) (model.Transaction, error)
 }
 
-func NewSMSParser(llmClient llm.CallLLM) Parser {
+var ErrNonTransactionSMS = errors.New("sms does not look like a transaction")
+
+type SMSParser struct {
+	llmClient CallLLM
+}
+
+func NewSMSParser(llmClient CallLLM) Parser {
 	return &SMSParser{llmClient: llmClient}
 }
 
 func (p *SMSParser) Parse(sms string) (model.Transaction, error) {
-	response, err := p.llmClient.Call(sms)
+	if !filter.IsTransactionSMS(sms) {
+		return model.Transaction{}, ErrNonTransactionSMS
+	}
+
+	sanitized := redact.Redact(sms)
+	response, err := p.llmClient.Call(sanitized)
 	if err != nil {
 		return model.Transaction{}, err
 	}
